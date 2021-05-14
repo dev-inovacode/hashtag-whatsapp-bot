@@ -1,7 +1,12 @@
 const WhatsappWeb = require('@adiwajshing/baileys');
 const { WAConnection, MessageType, Presence, ReconnectMode } = WhatsappWeb;
-const conn = new WAConnection();
-//const { authInfo } = require('../connections/wppConnection');
+const conn = new WAConnection()
+var authInfo
+try{
+  authInfo = require('../auth_info.json')
+}catch{
+  authInfo = {}
+}
 const dbConnection = require('../connections/mongooseConnection');
 const questionsSchema = require('./models/questionsSchema');
 const tagsSchema = require('./models/tagsSchema');
@@ -11,12 +16,28 @@ const moment = require('moment');
 moment.locale('pt-br');
 const hour = moment().format('LT');
 const date = moment().format('L');
+const loaded = true
 
 module.exports = handleAll = async () => {
-  //conn.loadAuthInfo(authInfo);
-  await conn.connect();
-  fs.existsSync('./auth_info.json');
-  fs.writeFileSync('./auth_info.json', JSON.stringify(authInfo, null, '\t'));
+  try{
+    console.log('relog')
+    conn.loadAuthInfo(authInfo); //depois da primeira
+    await conn.connect().catch(async () => {
+      console.log('relog catch')
+      conn.clearAuthInfo(authInfo)
+      await conn.connect()
+      const authInfoSave = conn.base64EncodedAuthInfo()
+      fs.existsSync('./auth_info.json');
+      fs.writeFileSync('./auth_info.json', JSON.stringify(authInfoSave, null, '\t'))
+    })
+  }catch {
+    console.log('novo')
+    await conn.connect();
+    const authInfoSave = conn.base64EncodedAuthInfo()
+    fs.existsSync('./auth_info.json');
+    fs.writeFileSync('./auth_info.json', JSON.stringify(authInfoSave, null, '\t'));
+  }
+
   conn.autoReconnect = ReconnectMode.onConnectionLost;
   conn.connectOptions.timeoutMs = 60 * 1000;
   conn.connectOptions.maxRetries = 10;
@@ -67,7 +88,8 @@ module.exports = handleAll = async () => {
           }, '')
           .trim(),
         group: group,
-        date: `${date} ${hour}`,
+        date: date,
+        hour: hour,
         type: `${hashTag.replace('#', '')}`,
       });
       return;

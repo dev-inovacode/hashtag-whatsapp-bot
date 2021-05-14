@@ -6,6 +6,7 @@ var questionsSchema = new mongoose.Schema({
   answer: { type: String, default: '' },
   group: { type: String },
   date: { type: String },
+  hour: { type: String },
   type: { type: String },
 })
 
