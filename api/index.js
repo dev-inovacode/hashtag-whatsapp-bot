@@ -20,19 +20,16 @@ const loaded = true
 
 module.exports = handleAll = async () => {
   try{
-    console.log('relog')
     conn.loadAuthInfo(authInfo); //depois da primeira
-    await conn.connect().catch(async () => {
-      console.log('relog catch')
+    await conn.connect().then(() => {console.log("Bot conectado")}).catch(async () => {
       conn.clearAuthInfo(authInfo)
-      await conn.connect()
+      await conn.connect().then(() => {console.log("Bot conectado")})
       const authInfoSave = conn.base64EncodedAuthInfo()
       fs.existsSync('./auth_info.json');
       fs.writeFileSync('./auth_info.json', JSON.stringify(authInfoSave, null, '\t'))
     })
   }catch {
-    console.log('novo')
-    await conn.connect();
+    await conn.connect().then(() => {console.log("Bot conectado")});
     const authInfoSave = conn.base64EncodedAuthInfo()
     fs.existsSync('./auth_info.json');
     fs.writeFileSync('./auth_info.json', JSON.stringify(authInfoSave, null, '\t'));
@@ -48,7 +45,6 @@ module.exports = handleAll = async () => {
       return false;
     }
     const sender = m.participant.split('@')[0];
-    console.log(sender);
     const preGroup = m.key.remoteJid.split('@')[0];
     const group = preGroup.split('-')[1];
     const messageContent = m.message;
